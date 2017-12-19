@@ -20,6 +20,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                     <th>日期时间</th>
                                     <th>注册人数</th>
                                     <th>当前状态</th>
+                                    <?php if($this->session->perm==1):?>
+                                    <th>操作</th>
+                                    <?php endif ?>
                                 </thead>
                                 <tbody>
                                 <?php foreach ($result as $item):?>
@@ -49,7 +52,15 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                         echo $j;
                                     }
                                     ?></td>
-                                <?php endforeach; endif;?>
+                                <?php endforeach; ?>
+                                    <?php if($this->session->perm==1):?>
+                                    <td>
+                                        <a href="#" class="btn-link">详情</a>&nbsp;
+                                        <a href="#" class="btn-link">编辑</a>&nbsp;
+                                        <a href="#" class="btn-link">删除</a>
+                                    </td>
+                                    <?php endif; ?>
+                                <?php endif; ?>
                                 </tr>
                                 <?php endforeach; ?>
                                 </tbody>

@@ -66,12 +66,16 @@ class Main extends CI_Controller {
             $this->loadpage('main/localhelp', $VIEW_DATA);
         } 
         else {
-            if(!$this->m_lh->getContentById($lhid)) { //如果lhid不存在返回404
+            $content = $this->m_lh->getContentById($lhid);
+            if (!$content) { //如果lhid不存在返回404
                 show_404();
+            }
+            if ($content['state'] != 1){ //如果没有开放报名并且不是管理员返回404
+                $this->session->perm < 1 ? show_404() : null;
             }
             if (!isset($action)){ // 用户点击查看详情
                 $status = $this->m_lh->userCheckEvent($this->session->userID, $lhid); // 检查用户是否已经注册该场LocalHelp
-                $VIEW_DATA = ['result' => $this->m_lh->getContentById($lhid), 'status' => (int)$status];
+                $VIEW_DATA = ['result' => $content, 'status' => (int)$status];
                 $this->loadpage('localhelp/content', $VIEW_DATA);
             }
             else if ($action=="register"){ // 用户点击详情页报名按钮
