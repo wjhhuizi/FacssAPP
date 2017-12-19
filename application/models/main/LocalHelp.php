@@ -71,6 +71,7 @@ class LocalHelp extends CI_Model
             return false;
         }
         $this->db->query($sql_2, [$uid, $lhid]);
+        $this->updateEventCounter($lhid);
         return $this->db->affected_rows();
     }
     
@@ -83,7 +84,15 @@ class LocalHelp extends CI_Model
             return false;
         }
         $this->db->query($sql_2, [$uid, $lhid]);
+        $this->updateEventCounter($lhid);
         return $this->db->affected_rows();
+    }
+    
+    public function updateEventCounter($lhid)
+    {// <更新注册人数>
+        $sql_1 = "SELECT count(*) FROM facss_localhelp_record WHERE lhid=?";
+        $sql_2 = "UPDATE facss_localhelp SET signup_cnt = ($sql_1) WHERE id=?";
+        $this->db->query($sql_2, [$lhid,$lhid]);
     }
     
     public function mod_addEvent($title,$location,$content,$departmrnt,$datetime,$state=0,$QR_img=null,$attachment=null)
