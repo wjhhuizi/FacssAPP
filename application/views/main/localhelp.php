@@ -24,7 +24,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                 <tbody>
                                 <?php foreach ($result as $item):?>
                                 <tr>
-                                <?php foreach ($item as $i => $j): ?>
+                                <?php if($item['state']!=3):
+                                    foreach ($item as $i => $j): ?>
                                     <td><?php 
                                     if($i=='state'){
                                         switch ($j) {
@@ -48,7 +49,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                         echo $j;
                                     }
                                     ?></td>
-                                <?php endforeach; ?>
+                                <?php endforeach; endif;?>
                                 </tr>
                                 <?php endforeach; ?>
                                 </tbody>
