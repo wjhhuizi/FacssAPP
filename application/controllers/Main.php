@@ -12,7 +12,7 @@ class Main extends CI_Controller {
             echo "<script>alert('请先登录！');</script>";
             redirect('/index', 'refresh');
         }
-        $this->load->model('main/LocalHelp2', 'lh2');
+        $this->load->model('main/LocalHelp', 'lh2');
 //        print("<pre>");
 //        var_dump($this->lh2->mod_addEvent("LocalHelp测试",null,"这里是一些内容","管理员，Admin","20170509115959"));
 //        var_dump($this->lh2->userRegisterEvent(2017100117, 8));
@@ -56,7 +56,7 @@ class Main extends CI_Controller {
     public function localhelp($lhid = null, $action = null /*1: 报名；2：取消*/)
     {// [Controller] /main/localhelp
         /* <Load Model> */
-        $this->load->model('main/LocalHelp2', 'm_lh');
+        $this->load->model('main/LocalHelp', 'm_lh');
         
         if(!isset($lhid)) { // 没有传递ID，显示LocalHelp主页面
             /* <Construct Data> */
@@ -77,16 +77,12 @@ class Main extends CI_Controller {
             else if ($action=="register"){ // 用户点击详情页报名按钮
                 $r = $this->m_lh->userRegisterEvent($this->session->userID, $lhid);
                 redirect('main/localhelp/'.$lhid,'auto');
-//                $status = $this->m_lh->userCheckEvent($this->session->userID, $lhid);
-//                $VIEW_DATA = ['result' => $this->m_lh->getContentById($lhid), 'status' => (int)$status, 'msg' => $r];
-//                $this->loadpage('localhelp/content', $VIEW_DATA);
+                if($r){echo "<script>alert('报名成功！');\n</script>";}
             } 
             else if ($action=="cancel"){ // 用户点击详情页取消报名
                 $r = $this->m_lh->userCancelEvent($this->session->userID, $lhid);
                 redirect('main/localhelp/'.$lhid,'auto');
-//                $status = $this->m_lh->userCheckEvent($this->session->userID, $lhid);
-//                $VIEW_DATA = ['result' => $this->m_lh->getContentById($lhid), 'status' => (int)$status, 'msg' => $r];
-//                $this->loadpage('localhelp/content', $VIEW_DATA);
+                if($r){echo "<script>alert('取消报名成功！');\n</script>";}
             }
         }
     }

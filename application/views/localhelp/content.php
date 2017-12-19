@@ -35,7 +35,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                         <button href="http://www.baidu.com/" class="btn btn-danger btn-block" id="_lh_confirm" disabled>确认报名</button>&nbsp;
                                     </div>
                                     <div class="col-md-3">
-                                        <button class="btn btn-default btn-block" onclick="window.location.href='localhelp'">返回</button>
+                                        <button class="btn btn-default btn-block" onclick="window.location.href='../localhelp'">返回</button>
                                     </div>
                                 </div>
                         </div>

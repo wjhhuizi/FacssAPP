@@ -3,82 +3,115 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class LocalHelp extends CI_Model
 {
+    protected $perm_level;                         //权限等级
+    
     public function __construct()
     {
         parent::__construct();
+        $this->perm_level = $this->session->perm;
         $this->load->database();
     }
     
-    
-    public function getSchedule()
-    {// <获取LocalHelp列表数据>
-        $sql = "SELECT `id`, `title`, `department`, `datetime`, `signup_cnt`, `state` FROM `facss_localhelp`";
-        $Q = $this->db->query($sql);
-        $result = $Q->result_array();
-        
-        $status = [0 => '未开放报名', 1 => '', 2 => '已停止报名', 3 => '已过期'];
-        foreach ($result as $k => $v)
-        {
-            $status[1] ='<a href="content/'.$v['id'].'" class="_lh_signup" lhid="'.$v['id'].'">'.'点此报名</a>';
-            $result[$k]['signup_cnt'] = (int)$v['signup_cnt'];
-            $result[$k]['state']      = $status[(int)$v['state']];
+    public function getSchedule() 
+    {// <获取LocalHelp时间表>
+        $sql_1 = "SELECT `id`, `title`, `department`, `datetime`, `signup_cnt`, `state` "
+                . "FROM `facss_localhelp`";
+        $result = $this->db->query($sql_1)->result_array();
+        $data = [];
+        foreach ($result as $v) {
+            array_push($data, [
+                'id'         => (int)$v['id'], 
+                'title'      =>      $v['title'],
+                'department' =>      $v['department'],
+                'datetime'   =>      $v['datetime'],
+                'signup_cnt' => (int)$v['signup_cnt'],
+                'state'      => (int)$v['state']
+            ]);
         }
-        
-//        echo'<pre>';
-//        print_r($result);
-//        die();
-        
-        return $result;
+        return $data;
     }
     
-    public function getContent($content_id = 0)
-    {// <获取单条LocalHelp信息>
-        $sql = 'SELECT `id`, `content`, `title`, `department`, `datetime`, `signup_cnt`, `state` FROM `facss_localhelp` WHERE id = ?';
-        $Q = $this->db->query($sql,$content_id);
-        return $Q->row_array() ? $Q->row_array() : NULL;
-//        echo'<pre>';
-//        print_r($result);
-//        die();
-    }
-    
-    public function getLHID($uid = 0)
-    {
-        $sql = 'SELECT `reg_localhelp` FROM `facss_users` WHERE user_id = ?';
-        $Q = $this->db->query($sql, $uid);
-        return $Q->row_array() ? unserialize($Q->row_array()['reg_localhelp']) : NULL;
-    }
-    
-    public function regLHID($uid, $reg_LHID)
-    {
-        $sql_1 = 'SELECT `reg_localhelp` FROM `facss_users` WHERE user_id = ?';
-        $Q_1 = $this->db->query($sql_1, $uid);
-        $LHID_arr = unserialize($Q_1->row_array()['reg_localhelp']);
-        array_push($LHID_arr, (int)$reg_LHID);
+    public function getContentById($lhid)
+    {// <获取相应LHID的内容>
+        $sql_1 = "SELECT * FROM `facss_localhelp` WHERE `id`=?";
+        $result = $this->db->query($sql_1, [$lhid])->row_array();
+        if (!$result) {return false;}
         
-        $sql_2 = 'UPDATE `facss_users` SET `reg_localhelp` = ? WHERE user_id = ?';
-        $Q_2 = $this->db->query($sql_2,[serialize($LHID_arr), (int)$uid]);
+        $data =['id'         => (int)$result['id'], 
+                'title'      =>      $result['title'],
+                'department' =>      $result['department'],
+                'datetime'   =>      $result['datetime'],
+                'signup_cnt' => (int)$result['signup_cnt'],
+                'content'    =>      $result['content'], 
+                'state'      => (int)$result['state'],
+                'QR_img'     =>      $result['QR_img'],
+                'attachment' =>      $result['attachment']];
         
-        $sql_3 = 'UPDATE `facss_localhelp` SET `signup_cnt` = `signup_cnt` + 1 WHERE id = ?';
-        $Q_3 = $this->db->query($sql_3,(int)$reg_LHID);
+        return $data;
     }
     
-    public function cancelLHID($uid, $cancel_LHID)
-    {
-        $sql_1 = 'SELECT `reg_localhelp` FROM `facss_users` WHERE user_id = ?';
-        $Q_1 = $this->db->query($sql_1, $uid);
-        $LHID_arr = unserialize($Q_1->row_array()['reg_localhelp']);
-        foreach ($LHID_arr as $k => $v)
-        {
-            if ($v == $cancel_LHID)
-            {
-                unset($LHID_arr[$k]);
-            }
+    public function userCheckEvent($uid, $lhid)
+    {// <用户报名查询>
+        $sql_1 = "SELECT 1 FROM `facss_localhelp_record` WHERE `uid`=? AND `lhid`=?";
+        $result_1 = $this->db->query($sql_1, [$uid, $lhid])->row_array();
+        if(isset($result_1)) {
+            return true;
         }
-        
-        $sql_2 = 'UPDATE `facss_users` SET `reg_localhelp` = ? WHERE user_id = ?';
-        $Q_2 = $this->db->query($sql_2,[serialize($LHID_arr), (int)$uid]);
-        
-        $sql_3 = 'UPDATE `facss_localhelp` SET `signup_cnt` = `signup_cnt` - 1 WHERE id = ?';
-        $Q_3 = $this->db->query($sql_3,(int)$cancel_LHID);
+        else { 
+            return false;
+        }
     }
+    
+    public function userRegisterEvent($uid, $lhid)
+    {// <用户报名>
+        $sql_1 = "SELECT 1 FROM `facss_localhelp_record` WHERE `uid`=? AND `lhid`=?";
+        $sql_2 = "INSERT INTO `facss_localhelp_record` (`uid`, `lhid`) VALUES (?,?)";
+        $result_1 = $this->db->query($sql_1, [$uid, $lhid])->row_array();
+        if(isset($result_1)){
+            return false;
+        }
+        $this->db->query($sql_2, [$uid, $lhid]);
+        return $this->db->affected_rows();
+    }
+    
+    public function userCancelEvent($uid, $lhid)
+    {// <用户取消报名>
+        $sql_1 = "SELECT 1 FROM `facss_localhelp_record` WHERE `uid`=? AND `lhid`=?";
+        $sql_2 = "DELETE FROM `facss_localhelp_record` WHERE `uid`=? AND `lhid`=?";
+        $result_1 = $this->db->query($sql_1, [$uid, $lhid])->row_array();
+        if(!isset($result_1)){
+            return false;
+        }
+        $this->db->query($sql_2, [$uid, $lhid]);
+        return $this->db->affected_rows();
+    }
+    
+    public function mod_addEvent($title,$location,$content,$departmrnt,$datetime,$state=0,$QR_img=null,$attachment=null)
+    {// <管理员添加 LocalHelp条目>
+        if($this->perm_level < 1) {return false;}  // 检查权限
+        $sql_1 = "INSERT INTO `facss_localhelp` "
+                . "(title,location,content,department,datetime,state,QR_img,attachment) "
+                . "VALUES (?,?,?,?,?,?,?,?)";
+        $result_1 = $this->db->query($sql_1, [$title,$location,$content,$departmrnt,$datetime,$state,$QR_img,$attachment]);
+        return $result_1;
+    }
+    
+    public function mod_delEvent($lhid)
+    {// <管理员删除 LocalHelp条目>
+        if($this->perm_level < 1) {return false;}  // 检查权限
+        $sql_1 = "DELETE FROM `facss_localhelp` WHERE id = ?";
+        $this->db->query($sql_1,[$lhid]);
+        return $this->db->affected_rows();
+    }
+    
+    public function mod_editEvent()
+    {// <管理员修改LocalHelp条目>
+        
+    }
+    
+    public function mod_editState($lhid, $state)
+    {// <管理员修改LocalHelp开放状态>
+        
+    }
+    
 }
